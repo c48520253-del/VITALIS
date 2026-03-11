@@ -1,4 +1,4 @@
-za<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -551,11 +551,21 @@ za<!DOCTYPE html>
             const inputName = document.getElementById('userNameInput').value.trim();
             const petName = document.getElementById('petNameInput').value.trim();
             
-            if (!inputName || !petName) {
-                return showNotification('warning', 'Form Belum Lengkap ✏️', 'Isi namamu dan nama peliharaanmu dulu ya! ✨');
-            }
+            if (!inputName || !petName) return alert("Isi namamu dan nama peliharaanmu dulu ya! ✨");
             
+            // TRICK: Paksa jalankan music.play() langsung di sini
+            // Karena fungsi ini dipicu oleh onclick tombol "Ayo Mulai"
+            const music = document.getElementById('bgMusic');
+            music.play().then(() => {
+                isPlaying = true;
+                document.getElementById('musicIcon').innerText = "🔊";
+            }).catch(error => {
+                console.log("Autoplay dicegah, user harus klik manual");
+            });
+        
             const userKey = (inputName + "_" + petName).toLowerCase();
+            // ... sisa kode lainnya
+        }
             
             if (music.paused && !musicIcon.innerText.includes('🔊')) {
                 toggleMusic();
@@ -837,3 +847,4 @@ za<!DOCTYPE html>
 </body>
 
 </html>
+
