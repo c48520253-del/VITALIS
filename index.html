@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>VITALIS · Premium Health Tracker</title>
+    
+    <!-- ✅ Google Fonts (di HEAD) -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- ✅ SweetAlert2 CSS (di HEAD) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    
+    <!-- ✅ Custom CSS (di HEAD) -->
+    <style>
+        :root {
+            --primary: #1A2F4F;
+            --accent: #FF7E5F;
+            --success: #4CAF50;
+            --bg-light: #FDFBFA;
+            --text-main: #2D3436;
+            --text-muted: #636E72;
+            --sidebar-width: 280px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
+        
+        body { 
+            background: #E8E0D4;
+            background-image: radial-gradient(circle at 20% 20%, #F1EADE 0%, transparent 40%), 
+                            radial-gradient(circle at 80% 80%, #D6C8B8 0%, transparent 40%);
+            height: 100dvh; 
+            width: 100vw;
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            padding: 20px; 
+            color: var(--text-main);
+            overflow: hidden; 
+        }
+
+        .ornament {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(30px);
+            z-index: -1;
+            opacity: 0.5;
+            animation: move 20s infinite alternate;
+        }
+        .orn-1 { width: 300px; height: 300px; background: var(--accent); top: -100px; left: -100px; }
+        .orn-2 { width: 250px; height: 250px; background: #4FACFE; bottom: -50px; right: -50px; animation-delay: -5s; }
+        
+        @keyframes move {
+            from { transform: translate(0, 0) rotate(0deg); }
+            to { transform: translate(100px, 50px) rotate(30deg); }
+        }
+
+        .particle {
+            position: absolute;
+            font-size: 20px;
+            pointer-events: none;
+            z-index: 1;
+            animation: float-particle 10s infinite linear;
+            opacity: 0.6;
+        }
+
+        @keyframes float-particle {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            20% { opacity: 0.6; }
+            80% { opacity: 0.6; }
+            100% { transform: translateY(-100px) rotate(360deg); opacity: 0; }
+        }
+
+        .app { 
+            max-width: 1100px;
+            width: 100%; 
+            height: 100%;
+            max-height: 850px;
+            background: rgba(255, 255, 255, 0.4); 
+            backdrop-filter: blur(10px);
+            border-radius: 40px; 
+            box-shadow: 0 40px 100px rgba(0, 0, 0, 0.1); 
+            overflow: hidden; 
+            position: relative; 
+            display: flex;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            z-index: 10;
+        }
+
+        .music-control {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: white;
+            padding: 10px;
+            border-radius: 50px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: 0.3s;
+            touch-action: manipulation;
+        }
+        .music-control:hover { transform: scale(1.05); }
+
+        #homePage { 
+            padding: 60px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            text-align: center; 
+            justify-content: center; 
+            height: 100%; 
+            position: absolute; 
+            width: 100%; 
+            background: transparent; 
+            z-index: 100; 
+            transition: all 0.8s cubic-bezier(0.7, 0, 0.3, 1); 
+            overflow-y: auto;
+        }
+
+        .home-card {
+            background: rgba(255, 255, 255, 0.8);
+            padding: 50px;
+            border-radius: 35px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.05);
+            border: 1px solid white;
+            position: relative;
+        }
+
+        .hero-title { font-size: 64px; font-weight: 800; color: var(--primary); letter-spacing: -3px; margin-bottom: 5px; position: relative; }
+        
+        .floating-emoji {
+            position: absolute;
+            font-size: 40px;
+            animation: float 3s infinite ease-in-out;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-15px) rotate(10deg); }
+        }
+
+        #trackerPage { 
+            display: none; 
+            opacity: 0; 
+            width: 100%;
+            height: 100%;
+            display: grid;
+            grid-template-columns: var(--sidebar-width) 1fr;
+            transition: 0.5s;
+        }
+
+        .sidebar {
+            background: var(--primary);
+            color: white;
+            padding: 50px 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            overflow-y: auto;
+        }
+
+        .main-content {
+            padding: 50px;
+            overflow-y: auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            align-content: start;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .desktop-header { grid-column: span 2; margin-bottom: 10px; }
+
+        .pet-card-premium {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 32px;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        
+        .pet-emoji { font-size: 90px; margin-bottom: 20px; display: block; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.2)); animation: bounce 3s infinite; }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+        .card { 
+            background: white; 
+            border-radius: 28px; 
+            padding: 30px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+            border: 1px solid rgba(232, 224, 212, 0.5);
+        }
+
+        .chart-card { grid-column: span 2; margin-top: 10px; }
+
+        .progress-bar-wrap { 
+            height: 16px; 
+            background: #F1EADE; 
+            border-radius: 20px; 
+            margin: 20px 0; 
+            overflow: hidden; 
+        }
+        .progress-fill { 
+            height: 100%; 
+            background: linear-gradient(90deg, var(--primary), #4facfe); 
+            width: 0%; 
+            transition: width 1.2s cubic-bezier(0.1, 0.5, 0.3, 1); 
+        }
+
+        .chart-container { 
+            display: flex; 
+            align-items: flex-end; 
+            justify-content: space-around; 
+            height: 240px; 
+            padding: 20px 10px;
+            background: linear-gradient(to bottom, transparent 95%, rgba(26, 47, 79, 0.05) 5%);
+            background-size: 100% 40px;
+            border-radius: 20px;
+            margin-top: 20px;
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .bar-wrapper { 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            flex: 1; 
+            height: 100%;
+            justify-content: flex-end;
+        }
+
+        .bar { 
+            width: 35px; 
+            border-radius: 8px 8px 4px 4px; 
+            transition: height 1s cubic-bezier(0.175, 0.885, 0.32, 1.275), background 0.3s ease; 
+            position: relative;
+        }
+
+        .bar-label { font-size: 12px; font-weight: 700; color: var(--text-muted); margin-top: 15px; }
+        .bar-value { font-size: 11px; font-weight: 800; margin-bottom: 8px; white-space: nowrap; }
+
+        .btn-main { 
+            background: var(--primary); 
+            color: white; 
+            border: none; 
+            padding: 18px 30px; 
+            border-radius: 18px; 
+            font-weight: 700; 
+            cursor: pointer; 
+            transition: 0.3s; 
+            z-index: 2;
+            touch-action: manipulation;
+        }
+        .btn-main:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        .btn-main:disabled { opacity: 0.8; cursor: default; }
+        
+        input[type="text"], input[type="number"], select { 
+            width: 100%; 
+            padding: 16px; 
+            border-radius: 16px; 
+            border: 2px solid #EEE; 
+            outline: none; 
+            background: white; 
+            font-size: 16px; 
+        }
+
+        #exerciseBtn.locked {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        @media (max-width: 900px) {
+            body { padding: 0; }
+            .app { flex-direction: column; height: 100dvh; border-radius: 0; max-height: none; }
+            
+            #trackerPage { 
+                grid-template-columns: 1fr; 
+                grid-template-rows: auto 1fr; 
+                height: 100%; 
+                overflow: hidden;
+            }
+
+            .sidebar { 
+                width: 100%; 
+                flex-direction: row; 
+                align-items: center; 
+                justify-content: space-between; 
+                padding: 15px 20px; 
+                height: auto;
+                background: var(--primary);
+                z-index: 20;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            }
+
+            .sidebar p { display: none; }
+
+            .pet-card-premium {
+                padding: 8px 15px;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                border-radius: 20px;
+                background: rgba(255, 255, 255, 0.1);
+                text-align: left;
+            }
+
+            .pet-emoji { font-size: 32px; margin-bottom: 0; animation: none; }
+            #displayPetName { font-size: 16px !important; margin-bottom: 0 !important; }
+            #streakDisplay { font-size: 10px !important; padding: 4px 10px !important; }
+
+            .sidebar button {
+                padding: 8px 12px;
+                font-size: 10px;
+                border-radius: 10px;
+            }
+
+            .main-content { 
+                padding: 20px; 
+                grid-template-columns: 1fr; 
+                overflow-y: auto;
+                gap: 16px;
+                background: #FDFBFA;
+            }
+
+            .desktop-header { grid-column: span 1; margin-bottom: 5px; }
+            .desktop-header h1 { font-size: 22px !important; }
+            .desktop-header p { font-size: 14px; }
+
+            .hero-title { font-size: 36px; }
+            .chart-card { grid-column: span 1; }
+            .card { padding: 20px; border-radius: 20px; }
+            .chart-container { height: 180px; }
+            .bar { width: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ✅ Audio (di BODY) -->
+    <audio id="bgMusic" loop>
+        <source src="bg-music.mp3" type="audio/mpeg">
+    </audio>
+
+    <!-- ✅ Music Control -->
+    <div class="music-control" onclick="toggleMusic()" aria-label="Toggle background music">
+        <span id="musicIcon">🔇</span>
+        <span style="font-size: 12px; font-weight: bold; color: var(--primary);">LO-FI MODE</span>
+    </div>
+
+    <!-- ✅ Decorations -->
+    <div class="ornament orn-1"></div>
+    <div class="ornament orn-2"></div>
+
+    <!-- ✅ App Container -->
+    <div class="app">
+        <!-- Home Page -->
+        <div id="homePage">
+            <div class="home-card">
+                <span class="floating-emoji" style="top: -20px; left: -20px; animation-delay: 0s;">✨</span>
+                <span class="floating-emoji" style="top: 40px; right: -30px; animation-delay: 0.5s;">🌈</span>
+                <span class="floating-emoji" style="bottom: -10px; left: 40%; animation-delay: 1s;">🎈</span>
+
+                <span style="font-size: 14px; font-weight: 800; color: var(--accent); letter-spacing: 3px; text-transform: uppercase; display: block; margin-bottom: 10px;">Your Happy Health Companion</span>
+                <h1 class="hero-title">VITALIS</h1>
+                <p style="color: var(--text-muted); margin-bottom: 40px; font-size: 18px; font-weight: 500;">Jaga kesehatanmu dengan melangkah setiap hari bersama Cahaya & Anastasya</p>
+                
+                <div style="width: 100%; max-width: 320px; display: flex; flex-direction: column; gap: 12px; margin: 0 auto;">
+                    <input type="text" id="userNameInput" placeholder="Siapa namamu?" aria-label="Nama pengguna">
+                    <input type="text" id="petNameInput" placeholder="Siapa nama peliharaanmu?" aria-label="Nama peliharaan">
+                    <select id="petTypeInput" aria-label="Jenis peliharaan">
+                        <option value="🐱">Kucing Lucu 🐱</option>
+                        <option value="🐶">Anjing Ceria 🐶</option>
+                        <option value="🐰">Kelinci Gemoy 🐰</option>
+                        <option value="🐹">Hamster Imut 🐹</option>
+                    </select>
+                    <button class="btn-main" style="margin-top: 10px; font-size: 16px;" onclick="startApp()" aria-label="Mulai aplikasi">Ayo Mulai! 🚀</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tracker Page -->
+        <div id="trackerPage">
+            <aside class="sidebar">
+                <div class="pet-info-wrapper">
+                    <p style="font-size: 11px; font-weight: 700; opacity: 0.5; letter-spacing: 2px; margin-bottom: 10px;">VITALIS DASHBOARD</p>
+                    <div class="pet-card-premium">
+                        <span class="pet-emoji" id="displayPetEmoji">🐱</span>
+                        <div>
+                            <h2 id="displayPetName" style="font-size: 24px; font-weight: 800; margin-bottom: 5px;">Pet Name</h2>
+                            <div style="font-size: 13px; font-weight: 600; background: var(--accent); display: inline-block; padding: 6px 16px; border-radius: 50px;" id="streakDisplay">🔥 0 Day Streak</div>
+                        </div>
+                    </div>
+                </div>
+                <button id="certBtn" onclick="generateCertificate()" style="background: var(--accent); border: none; color: white; padding: 12px; border-radius: 14px; cursor: pointer; font-size: 12px; font-weight: 800; margin-bottom: 10px; width: 100%; box-shadow: 0 4px 10px rgba(255, 126, 95, 0.3);" aria-label="Ambil sertifikat">
+                    🎓 AMBIL SERTIFIKAT
+                </button>
+                <button style="background: transparent; border: 1px solid rgba(255,255,255,0.2); color: white; padding: 12px; border-radius: 14px; cursor: pointer; font-size: 12px; font-weight: 600;" onclick="saveAndExit()" aria-label="Simpan dan keluar">SIMPAN & KELUAR</button>
+            </aside>
+
+            <main class="main-content">
+                <div class="desktop-header">
+                    <h1 id="greetingText" style="font-size: 32px; font-weight: 800; color: var(--primary);">Selamat Pagi!</h1>
+                    <p style="color: var(--text-muted); font-weight: 500;">Mari buat peliharaanmu bangga hari ini!</p>
+                </div>
+
+                <div class="card">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
+                        <div style="background: #E8F0FE; padding: 10px; border-radius: 12px;" aria-hidden="true">👟</div>
+                        <h3 style="font-size: 18px; font-weight: 700;">Target Langkah</h3>
+                    </div>
+                    <input type="number" id="stepsInput" placeholder="Input langkah hari ini..." aria-label="Jumlah langkah hari ini">
+                    <button class="btn-main" style="width: 100%; padding: 14px; margin-top: 15px; font-size: 14px;" onclick="updateSteps()" aria-label="Update data langkah">Update Data</button>
+                    <div class="progress-bar-wrap"><div id="stepProgress" class="progress-fill" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div></div>
+                    <p id="stepStatus" style="font-size: 12px; font-weight: 800; text-align: center; color: var(--primary); text-transform: uppercase;">STATUS: SIAP BERAKSI</p>
+                </div>
+
+                <div class="card" style="display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
+                    <div style="background: #FFF0EE; padding: 15px; border-radius: 50%; margin-bottom: 15px; font-size: 24px;" aria-hidden="true">🥗</div>
+                    <p style="font-size: 14px; font-weight: 700; margin-bottom: 15px;">Olahraga Selesai?</p>
+                    <button class="btn-main locked" id="exerciseBtn" style="width: 100%; background: var(--accent);" onclick="addStreak()" aria-label="Tandai olahraga selesai">Selesai! ✨</button>
+                    <p id="lockWarning" style="font-size: 10px; color: var(--accent); margin-top: 10px; font-weight: 700;">⚠️ Isi langkah dulu!</p>
+                </div>
+
+                <div class="card chart-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <h3 style="font-size: 18px; font-weight: 700;">Grafik Mingguan</h3>
+                        <span id="footerName" style="font-size: 11px; font-weight: 800; color: var(--accent); background: #FFF0EE; padding: 5px 15px; border-radius: 20px;">USER</span>
+                    </div>
+                    <div class="chart-container" id="chartContainer" role="img" aria-label="Grafik aktivitas mingguan"></div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- ✅ LIBRARY CDN (SEBELUM custom script - PALING PENTING!) -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <!-- ✅ CUSTOM JAVASCRIPT (PALING AKHIR) -->
+    <script>
+        // ========================================
+        // ✅ HELPER: Notifikasi Konsisten (Swal)
+        // ========================================
+        function showNotification(type, title, message, options = {}) {
+            const icons = { 'success': 'success', 'error': 'error', 'warning': 'warning', 'info': 'info' };
+            return Swal.fire({
+                icon: icons[type] || 'info',
+                title: `<span style="font-size: 20px;">${title}</span>`,
+                text: message,
+                confirmButtonColor: '#FF7E5F',
+                cancelButtonColor: '#636E72',
+                ...options
+            });
+        }
+
+        // ========================================
+        // 🎵 LOGIKA MUSIK
+        // ========================================
+        const music = document.getElementById('bgMusic');
+        const musicIcon = document.getElementById('musicIcon');
+
+        function toggleMusic() {
+            if (music.paused) {
+                music.play().then(() => {
+                    musicIcon.innerText = "🔊";
+                }).catch(e => {
+                    console.log("Autoplay diblokir browser:", e);
+                    showNotification('info', '🔇 Musik Diblokir', 'Klik tombol lagi setelah interaksi pertama ya!');
+                });
+            } else {
+                music.pause();
+                musicIcon.innerText = "🔇";
+            }
+        }
+
+        // ========================================
+        // ✨ ANIMASI PARTIKEL
+        // ========================================
+        function createParticles() {
+            const icons = ['❤️', '⭐', '☁️', '🌸', '✨', '🐾'];
+            for (let i = 0; i < 15; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.innerText = icons[Math.floor(Math.random() * icons.length)];
+                particle.style.left = Math.random() * 100 + 'vw';
+                particle.style.animationDuration = (Math.random() * 5 + 5) + 's';
+                particle.style.animationDelay = Math.random() * 5 + 's';
+                particle.style.fontSize = (Math.random() * 20 + 10) + 'px';
+                document.body.appendChild(particle);
+            }
+        }
+        createParticles();
+
+        // ========================================
+        // 💾 STATE MANAGEMENT
+        // ========================================
+        let state = {
+            userName: '', petName: '', petEmoji: '🐱',
+            steps: 0, streak: 0, history: [0,0,0,0,0,0,0],
+            lastExerciseDate: null,
+            activeKey: '' 
+        };
+
+        function saveToLocal() {
+            if(!state.activeKey) return;
+            try {
+                let allUsersData = JSON.parse(localStorage.getItem('vitalisUsers')) || {};
+                allUsersData[state.activeKey] = state;
+                localStorage.setItem('vitalisUsers', JSON.stringify(allUsersData));
+            } catch(e) {
+                console.error("Gagal simpan ke localStorage:", e);
+                showNotification('error', 'Penyimpanan Gagal', 'Storage mungkin penuh. Coba hapus data lama.');
+            }
+        }
+
+        // ========================================
+        // 📅 LOGIKA GANTI HARI
+        // ========================================
+        function refreshDailyData() {
+            const today = new Date();
+            const todayString = today.toDateString();
+            const syncKey = 'last_sync_date_' + state.activeKey;
+            const lastSavedDateStr = localStorage.getItem(syncKey);
+
+            if (lastSavedDateStr && lastSavedDateStr !== todayString) {
+                const lastDate = new Date(lastSavedDateStr);
+                const diffTime = Math.abs(today - lastDate);
+                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+                if (diffDays > 0) {
+                    for (let i = 0; i < Math.min(diffDays, 7); i++) {
+                        state.history.shift();
+                        state.history.push(0);
+                    }
+                    state.steps = 0;
+                    saveToLocal();
+                }
+            }
+            localStorage.setItem(syncKey, todayString);
+        }
+
+        // ========================================
+        // 🚀 LOGIKA APLIKASI UTAMA
+        // ========================================
+        function startApp() {
+            const inputName = document.getElementById('userNameInput').value.trim();
+            const petName = document.getElementById('petNameInput').value.trim();
+            
+            if (!inputName || !petName) {
+                return showNotification('warning', 'Form Belum Lengkap ✏️', 'Isi namamu dan nama peliharaanmu dulu ya! ✨');
+            }
+            
+            const userKey = (inputName + "_" + petName).toLowerCase();
+            
+            if (music.paused && !musicIcon.innerText.includes('🔊')) {
+                toggleMusic();
+            }
+
+            let allUsersData = {};
+            try {
+                allUsersData = JSON.parse(localStorage.getItem('vitalisUsers')) || {};
+            } catch(e) {
+                console.warn("Gagal load data user:", e);
+            }
+            
+            if (allUsersData[userKey]) {
+                state = allUsersData[userKey];
+                state.activeKey = userKey;
+            } else {
+                state = {
+                    userName: inputName,
+                    petName: petName,
+                    petEmoji: document.getElementById('petTypeInput').value,
+                    steps: 0,
+                    streak: 0,
+                    history: [0,0,0,0,0,0,0],
+                    lastExerciseDate: null,
+                    activeKey: userKey
+                };
+            }
+            
+            refreshDailyData(); 
+            showTrackerPage();
+        }
+        
+        function showTrackerPage() {
+            document.getElementById('greetingText').innerText = `Halo, ${state.userName}! ✨`;
+            document.getElementById('displayPetName').innerText = state.petName;
+            document.getElementById('displayPetEmoji').innerText = state.petEmoji;
+            document.getElementById('streakDisplay').innerText = `🔥 ${state.streak} Day Streak`;
+            document.getElementById('footerName').innerText = state.userName.toUpperCase();
+            
+            const todayString = new Date().toDateString();
+
+            if (state.lastExerciseDate === todayString) {
+                setExerciseCompleteUI();
+            } else {
+                updateButtonState(state.steps);
+            }
+
+            const home = document.getElementById('homePage');
+            const tracker = document.getElementById('trackerPage');
+            
+            home.style.transform = 'translateY(-20px)';
+            home.style.opacity = '0';
+            
+            setTimeout(() => {
+                home.style.display = 'none';
+                tracker.style.display = 'grid';
+                setTimeout(() => { 
+                    tracker.style.opacity = '1'; 
+                    renderChart(); 
+                    updateProgressUI(state.steps); 
+                }, 50);
+            }, 600);
+        }
+
+        function updateSteps() {
+            const val = parseInt(document.getElementById('stepsInput').value) || 0;
+            if (val < 0) {
+                showNotification('warning', 'Input Tidak Valid', 'Jumlah langkah tidak boleh negatif!');
+                return;
+            }
+            state.steps = val;
+            state.history[6] = val; 
+            
+            updateProgressUI(val);
+            updateButtonState(val);
+            renderChart();
+            saveToLocal();
+            
+            showNotification('success', 'Data Terupdate! 📊', `Langkah hari ini: ${val.toLocaleString()} 👟`);
+        }
+
+        function updateProgressUI(val) {
+            const percent = Math.min(100, (val / 5000) * 100);
+            const progressEl = document.getElementById('stepProgress');
+            progressEl.style.width = percent + '%';
+            progressEl.setAttribute('aria-valuenow', Math.round(percent));
+            
+            let status = val >= 5000 ? "LUAR BIASA! 🌟" : (val >= 2500 ? "HEBAT! 👍" : "AYO SEMANGAT! 💪");
+            document.getElementById('stepStatus').innerText = "STATUS: " + status;
+        }
+
+        function updateButtonState(val) {
+            const btn = document.getElementById('exerciseBtn');
+            const warning = document.getElementById('lockWarning');
+            
+            if (state.lastExerciseDate === new Date().toDateString()) return;
+
+            if (val > 0) {
+                btn.classList.remove('locked');
+                btn.disabled = false;
+                if(warning) warning.style.display = 'none';
+            } else {
+                btn.classList.add('locked');
+                btn.disabled = true;
+                if(warning) warning.style.display = 'block';
+            }
+        }
+
+        function addStreak() {
+            if (state.steps <= 0) {
+                return showNotification('info', 'Langkah Belum Diisi 👟', 'Masukkan jumlah langkahmu dulu di kotak "Target Langkah" ya!');
+            }
+
+            const todayString = new Date().toDateString();
+            if (state.lastExerciseDate === todayString) {
+                return showNotification('info', 'Sudah Dicatat! ✅', 'Kamu sudah menyelesaikan olahraga hari ini. Istirahat yang cukup ya!');
+            }
+
+            state.streak++;
+            state.lastExerciseDate = todayString; 
+            
+            document.getElementById('streakDisplay').innerText = `🔥 ${state.streak} Day Streak`;
+            setExerciseCompleteUI();
+            saveToLocal();
+            
+            showNotification('success', 'Mantap! 🎉', `Streak kamu sekarang ${state.streak} hari! ${state.petName} bangga padamu! ✨`);
+        }
+
+        function setExerciseCompleteUI() {
+            const btn = document.getElementById('exerciseBtn');
+            const warning = document.getElementById('lockWarning');
+            btn.innerText = "MANTAP! 🎉";
+            btn.style.background = "var(--success)";
+            btn.disabled = true;
+            btn.classList.remove('locked');
+            if(warning) warning.style.display = 'none';
+        }
+
+        function getDynamicLabels() {
+            const days = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+            let labels = [];
+            let today = new Date();
+            for (let i = 6; i >= 0; i--) {
+                let d = new Date();
+                d.setDate(today.getDate() - i);
+                labels.push(days[d.getDay()]);
+            }
+            return labels;
+        }
+
+        function renderChart() {
+            const container = document.getElementById('chartContainer');
+            container.innerHTML = '';
+            const visualMax = 10000; 
+            const labels = getDynamicLabels();
+
+            state.history.forEach((val, index) => {
+                const heightPercentage = Math.max(8, Math.min(100, (val / visualMax) * 100));
+                const barWrapper = document.createElement('div');
+                barWrapper.className = 'bar-wrapper';
+                const isToday = index === 6;
+                
+                let barColor = 'var(--primary)';
+                if (isToday) barColor = 'var(--accent)';
+                else if (val >= 5000) barColor = 'var(--success)';
+                
+                const finalColor = val === 0 ? '#E8E0D4' : barColor;
+                const displayVal = val >= 1000 ? (val/1000).toFixed(1) + 'k' : val;
+
+                barWrapper.innerHTML = `
+                    <span class="bar-value" style="color: ${isToday ? 'var(--accent)' : 'var(--text-main)'}">${displayVal}</span>
+                    <div class="bar" style="height: ${heightPercentage}%; background: ${finalColor};" data-value="${val} Langkah"></div>
+                    <span class="bar-label" style="${isToday ? 'color: var(--accent); font-weight: 800;' : ''}">${labels[index]}</span>
+                `;
+                container.appendChild(barWrapper);
+            });
+        }
+
+        function saveAndExit() { 
+            saveToLocal(); 
+            showNotification('success', 'Data Disimpan! 💾', 'Terima kasih sudah menggunakan VITALIS. Sampai jumpa! 👋', {
+                confirmButtonText: 'Tutup',
+                willClose: () => { location.reload(); }
+            });
+        }
+
+        // ========================================
+        // 🎨 GENERATE CERTIFICATE (COLORFUL VERSION - FIXED!)
+        // ========================================
+       async function generateCertificate() {
+    // Validasi
+    if (!state.petName || !state.userName) {
+        return showNotification('error', 'Data Tidak Lengkap', 'Silakan mulai aplikasi dari awal.');
+    }
+    if (!window.jspdf) {
+        return showNotification('error', 'Library PDF Belum Siap', 'Silakan refresh halaman.');
+    }
+
+    const { jsPDF } = window.jspdf;
+    
+    // Helper sanitize
+    const sanitize = (txt) => String(txt).replace(/[\(\)\\]/g, '\\$&').replace(/\n/g, ' ');
+    const safePetName = sanitize(state.petName);
+    const safeUserName = sanitize(state.userName);
+    
+    Swal.fire({
+        title: 'Membuat Sertifikat...',
+        html: `Mohon tunggu ya, <b>${safePetName}</b> sedang mencetaknya! ✨`,
+        allowOutsideClick: false,
+        showConfirmButton: false,
+        didOpen: () => Swal.showLoading()
+    });
+
+    setTimeout(() => {
+        const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+
+        // Background & border
+        doc.setFillColor(26, 47, 79);
+        doc.rect(0, 0, 297, 210, 'F');
+        doc.setLineWidth(3);
+        doc.setDrawColor(255, 126, 95);
+        doc.rect(10, 10, 277, 190);
+        
+        // Title
+        doc.setFontSize(36);
+        doc.setTextColor(255, 255, 255);
+        doc.text('SERTIFIKAT PENGGUNA', 148.5, 50, { align: 'center' });
+        doc.setFontSize(18);
+        doc.text('VITALIS · Premium Health Tracker', 148.5, 65, { align: 'center' });
+        
+        // Content
+        doc.setFontSize(16);
+        doc.text('Diberikan kepada:', 148.5, 90, { align: 'center' });
+        
+        doc.setFontSize(28);
+        doc.setTextColor(255, 126, 95);
+        doc.text(safeUserName, 148.5, 110, { align: 'center' }); // ✅ Sanitized
+        
+        doc.setFontSize(16);
+        doc.setTextColor(255, 255, 255);
+        doc.text('Bersama peliharaan setia:', 148.5, 130, { align: 'center' });
+        
+        // ✅ HAPUS EMOJI atau tampilkan terpisah
+        doc.setFontSize(24);
+        doc.text(safePetName, 148.5, 145, { align: 'center' }); // ✅ Hanya nama, aman!
+        
+        // Stats
+        doc.setFontSize(14);
+        doc.text(`Streak: ${state.streak} hari`, 148.5, 165, { align: 'center' });
+        doc.text(`Langkah Hari Ini: ${state.steps.toLocaleString()}`, 148.5, 175, { align: 'center' });
+        
+        // Date
+        doc.setFontSize(12);
+        doc.text(`Tanggal: ${new Date().toLocaleDateString('id-ID')}`, 148.5, 190, { align: 'center' });
+        
+        // Save
+        doc.save(`Sertifikat-VITALIS-${safeUserName}.pdf`);
+        
+        Swal.fire({
+            title: 'Sertifikat Siap! 🎓',
+            text: `Selamat! Kamu dan ${safePetName} luar biasa hari ini.`,
+            icon: 'success',
+            confirmButtonText: 'Keren! ✨',
+            confirmButtonColor: '#FF7E5F'
+        });
+    }, 1500);
+}
+        // ✅ Debug: Cek library loaded
+        window.addEventListener('DOMContentLoaded', () => {
+            console.log('✅ SweetAlert2:', typeof Swal !== 'undefined' ? 'LOADED' : 'NOT LOADED');
+            console.log('✅ jsPDF:', typeof window.jspdf !== 'undefined' ? 'LOADED' : 'NOT LOADED');
+        });
+
+        // ✅ Cleanup particles
+        window.addEventListener('beforeunload', () => {
+            document.querySelectorAll('.particle').forEach(p => p.remove());
+        });
+    </script>
+</body>
+</html>
